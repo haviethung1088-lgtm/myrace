@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.126",
+  "ver": "1.2.128",
   "date": "2026-10-21",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,8 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.128: thay banner Chú thuật hồi chiến bằng key visual chính thức có Itadori và Sukuna, căn lại vùng hiển thị nhân vật.",
+    "Bản 1.2.127: thêm giao diện giới hạn Chú thuật hồi chiến với key visual anime thật, tông tím chú lực và biểu tượng điều hướng đồng bộ.",
     "Bản 1.2.126: khi chuyển bài bổ trợ, tự đưa tiêu đề bài vừa mở lên đầu vùng đọc sau khi bài cũ đóng để nội dung luôn bung xuống dưới.",
     "Bản 1.2.125: giữ vị trí cuộn khi chuyển bài bổ trợ; ngăn trang tự kéo ngược lên và chỉ cuộn xuống khi cần để thấy tiêu đề bài vừa mở.",
     "Bản 1.2.124: khi mở bài bổ trợ, tự cuộn nhẹ đến tiêu đề nếu nội dung mới bung xuống khỏi vùng nhìn.",
