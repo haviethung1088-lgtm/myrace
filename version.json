@@ -1,12 +1,13 @@
 {
-  "ver": "1.2.120",
-  "date": "2026-10-17",
+  "ver": "1.2.121",
+  "date": "2026-10-21",
   "owner": {
     "name": "Hà Việt Hùng",
     "phone": "0968xxx888",
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.121: bổ sung giải thích các vùng E/T/I/R, Strides, ký hiệu chạy và 6 bài bổ trợ có ảnh minh họa trong mục Pace.",
     "Bản 1.2.120: thanh điều hướng chờ 5 giây mới tự ẩn; bổ sung biểu tượng thời tiết theo trạng thái/mức độ mưa, tuyết, sương mù và dông cho mọi giao diện.",
     "Bản 1.2.119: riêng theme My Race kéo cụm thời tiết sát giờ thêm 3 mm nữa.",
     "Bản 1.2.118: riêng theme My Race kéo cụm thời tiết sát giờ thêm khoảng 3 mm, canh nhiệt độ vừa chớm vùng vệt nền banner.",
