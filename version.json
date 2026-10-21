@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.124",
+  "ver": "1.2.125",
   "date": "2026-10-21",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,7 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.125: giữ vị trí cuộn khi chuyển bài bổ trợ; ngăn trang tự kéo ngược lên và chỉ cuộn xuống khi cần để thấy tiêu đề bài vừa mở.",
     "Bản 1.2.124: khi mở bài bổ trợ, tự cuộn nhẹ đến tiêu đề nếu nội dung mới bung xuống khỏi vùng nhìn.",
     "Bản 1.2.123: mỗi lần chỉ mở một mục Chi tiết & lưu ý hoặc bài bổ trợ; đổi tiêu đề thành Bài bổ trợ, chuyển mô tả vào nút thông tin, đánh số bài tập và thêm ảnh minh họa có nguồn cho 4 bài còn thiếu.",
     "Bản 1.2.122: chuẩn hóa tên bài bổ trợ trong chi tiết buổi tập và tự đóng mục đang mở khi chuyển sang mục giải thích Pace hoặc bài tập khác.",
