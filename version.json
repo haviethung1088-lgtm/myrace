@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.129",
+  "ver": "1.2.130",
   "date": "2026-10-23",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,8 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.130: Cập nhật an toàn hơn khi mạng lỗi; dữ liệu khôi phục không hợp lệ sẽ không thay thế dữ liệu hiện tại.",
+    "Bản 1.2.129: Hướng dẫn sử dụng khớp giao diện; lịch sử cập nhật ngắn gọn, dễ hiểu.",
     "Bản 1.2.129: Hướng dẫn sử dụng khớp giao diện hiện tại; lịch sử cập nhật được viết ngắn gọn, dễ hiểu.",
     "Bản 1.2.128: Cập nhật hình ảnh giao diện Chú thuật hồi chiến.",
     "Bản 1.2.127: Thêm giao diện Chú thuật hồi chiến.",

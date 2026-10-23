@@ -1,5 +1,5 @@
 /* My Race – Service Worker: offline + Web Push */
-var V = "myrace-v93";
+var V = "myrace-v94";
 var ASSETS = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon-v1-2-72.png", "icon-192-v1-2-72.png", "icon-512-v1-2-72.png", "assets/myrace-logo.png", "assets/optimus-head.jpg", "assets/bumblebee-head.jpg", "assets/kirito-head.png", "assets/ironman-hero.jpg", "assets/avengers-team.jpg", "assets/naruto-banner.webp", "assets/chelsea-banner.jpg", "assets/jujutsu-banner.jpg", "assets/myrace-icon.png", "assets/myrace-wordmark.png", "assets/myrace-wordmark-only.png", "assets/myrace-tagline.png", "assets/myrace-banner.png", "assets/support-squat.jpg", "assets/support-lunge.jpg", "assets/support-calf-raise.jpg", "assets/support-plank.jpg", "assets/support-glute-bridge.jpg", "assets/support-deadbug.jpg", "assets/support-RDL.jpg", "assets/support-side-plank.jpg", "assets/support-bird-dog.jpg", "assets/support-mobility.jpg"];
 
 self.addEventListener("install", function (e) {
@@ -25,7 +25,11 @@ self.addEventListener("fetch", function (e) {
   }
   /* cache:reload được dùng chủ động khi app phát hiện bản mới; cập nhật cache trước khi tải lại trang. */
   if (r.cache === "reload") {
-    e.respondWith(network().then(function (res) { return res || caches.match(r).then(function (m) { return m || caches.match("./"); }); }));
+    /* Không trả cache cũ trong luồng cập nhật: nếu mạng lỗi, để fetch thất bại để app báo và không tải lại nhầm bản. */
+    e.respondWith(fetch(r).then(function (res) {
+      if (!res || !res.ok) throw new Error("Update fetch failed");
+      return caches.open(V).then(function (c) { return c.put(r, res.clone()).then(function () { return res; }); });
+    }));
     return;
   }
   var fresh = network();
