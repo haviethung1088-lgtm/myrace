@@ -1,5 +1,5 @@
 /* My Race – Service Worker: offline + Web Push */
-var V = "myrace-v94";
+var V = "myrace-v95";
 var ASSETS = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon-v1-2-72.png", "icon-192-v1-2-72.png", "icon-512-v1-2-72.png", "assets/myrace-logo.png", "assets/optimus-head.jpg", "assets/bumblebee-head.jpg", "assets/kirito-head.png", "assets/ironman-hero.jpg", "assets/avengers-team.jpg", "assets/naruto-banner.webp", "assets/chelsea-banner.jpg", "assets/jujutsu-banner.jpg", "assets/myrace-icon.png", "assets/myrace-wordmark.png", "assets/myrace-wordmark-only.png", "assets/myrace-tagline.png", "assets/myrace-banner.png", "assets/support-squat.jpg", "assets/support-lunge.jpg", "assets/support-calf-raise.jpg", "assets/support-plank.jpg", "assets/support-glute-bridge.jpg", "assets/support-deadbug.jpg", "assets/support-RDL.jpg", "assets/support-side-plank.jpg", "assets/support-bird-dog.jpg", "assets/support-mobility.jpg"];
 
 self.addEventListener("install", function (e) {
