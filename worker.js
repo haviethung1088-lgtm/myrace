@@ -119,8 +119,10 @@ export default {
       }
       if (url.pathname === "/unsubscribe") { delete subs[await sid(b.endpoint || "")]; await env.KV.put("subs", JSON.stringify(subs)); return J({ ok: true }); }
       if (url.pathname === "/test") {
-        const r = subs[await sid(b.endpoint || "")]; if (!r) return J({ error: "Thiết bị chưa đăng ký" }, 404);
-        return J({ status: await push(env, r.sub, { title: "My Race", body: "Thông báo đẩy đã hoạt động.", tag: "test", url: "./" }) });
+        const id = await sid(b.endpoint || ""), r = subs[id]; if (!r) return J({ error: "Thiết bị chưa đăng ký" }, 404);
+        const status = await push(env, r.sub, { title: "My Race", body: "Thông báo đẩy đã hoạt động.", tag: "test", url: "./" });
+        if (status === 404 || status === 410) { delete subs[id]; await env.KV.put("subs", JSON.stringify(subs)); return J({ status, error: "Đăng ký thiết bị đã hết hạn. Hãy bật nhắc lại trên thiết bị." }); }
+        return J({ status, error: status < 200 || status >= 300 ? "Dịch vụ thông báo từ chối yêu cầu (HTTP " + status + ")." : undefined });
       }
     } catch (e) { return J({ error: String(e && e.message || e) }, 500); }
     return J({ error: "not found" }, 404);

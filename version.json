@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.134",
+  "ver": "1.2.135",
   "date": "2026-10-23",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,7 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.135: Cải thiện bật, gửi thử và tắt nhắc; báo lỗi cấu hình rõ hơn, tự phát hiện đăng ký thiết bị đã hết hạn.",
     "Bản 1.2.134: Giao diện gọn, dễ đọc và dễ thao tác hơn; hỗ trợ giảm chuyển động, ảnh bài bổ trợ tải khi cần.",
     "Bản 1.2.133: Sửa lỗi khiến app dừng ở màn hình khởi động; thêm nút tải lại nếu app mở quá lâu.",
     "Bản 1.2.132: Giữ nguyên lịch các tuần đã qua và tuần hiện tại; thay đổi bắt đầu tuần kế tiếp, khối lượng tự động tham chiếu tối đa 2 tuần hoàn thành gần nhất.",
