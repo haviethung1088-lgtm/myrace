@@ -1,12 +1,19 @@
 {
-  "ver": "1.2.128",
-  "date": "2026-10-21",
+  "ver": "1.2.129",
+  "date": "2026-10-23",
   "owner": {
     "name": "Hà Việt Hùng",
     "phone": "0968xxx888",
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.129: Hướng dẫn sử dụng khớp giao diện hiện tại; lịch sử cập nhật được viết ngắn gọn, dễ hiểu.",
+    "Bản 1.2.128: Cập nhật hình ảnh giao diện Chú thuật hồi chiến.",
+    "Bản 1.2.127: Thêm giao diện Chú thuật hồi chiến.",
+    "Bản 1.2.126: Khi mở bài bổ trợ mới, tiêu đề bài được đưa vào vùng nhìn.",
+    "Bản 1.2.125: Giữ vị trí cuộn khi chuyển giữa các bài bổ trợ.",
+    "Bản 1.2.124: Cuộn nhẹ tới bài bổ trợ vừa mở.",
+    "Bản 1.2.123: Mỗi lần chỉ mở một mục chi tiết hoặc bài bổ trợ; bổ sung hướng dẫn và ảnh.",
     "Bản 1.2.128: thay banner Chú thuật hồi chiến bằng key visual chính thức có Itadori và Sukuna, căn lại vùng hiển thị nhân vật.",
     "Bản 1.2.127: thêm giao diện giới hạn Chú thuật hồi chiến với key visual anime thật, tông tím chú lực và biểu tượng điều hướng đồng bộ.",
     "Bản 1.2.126: khi chuyển bài bổ trợ, tự đưa tiêu đề bài vừa mở lên đầu vùng đọc sau khi bài cũ đóng để nội dung luôn bung xuống dưới.",
