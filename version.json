@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.138",
+  "ver": "1.2.140",
   "date": "2026-10-24",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,8 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.140: Giữ nguyên dữ liệu đã lưu khi một phần giao diện gặp lỗi; cải thiện hiển thị thống kê Trang chủ.",
+    "Bản 1.2.139: Sửa lỗi dấu phân cách trong Guide khiến mục hướng dẫn không mở được.",
     "Bản 1.2.138: Sửa lỗi mục Cài đặt không hiển thị sau khi sắp xếp lại các nhóm.",
     "Bản 1.2.137: Sắp xếp Cài đặt thành năm nhóm thu gọn để tìm hồ sơ, giao diện, lịch nhắc, sao lưu và thời tiết nhanh hơn.",
     "Bản 1.2.136: Thêm lịch thông báo cố định 20:00, 00:00 và 08:00; người dùng chỉ cần bật thông báo trên thiết bị.",
