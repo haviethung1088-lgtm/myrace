@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.137",
+  "ver": "1.2.138",
   "date": "2026-10-24",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,7 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.138: Sửa lỗi mục Cài đặt không hiển thị sau khi sắp xếp lại các nhóm.",
     "Bản 1.2.137: Sắp xếp Cài đặt thành năm nhóm thu gọn để tìm hồ sơ, giao diện, lịch nhắc, sao lưu và thời tiết nhanh hơn.",
     "Bản 1.2.136: Thêm lịch thông báo cố định 20:00, 00:00 và 08:00; người dùng chỉ cần bật thông báo trên thiết bị.",
     "Bản 1.2.135: Cải thiện bật, gửi thử và tắt nhắc; báo lỗi cấu hình rõ hơn, tự phát hiện đăng ký thiết bị đã hết hạn.",
