@@ -1,7 +1,7 @@
 /* My Race – Service Worker: offline + Web Push */
-var V = "myrace-v99";
+var V = "myrace-v100";
 /* Ảnh bài bổ trợ được lưu vào cache khi người dùng mở bài; không tải cả bộ khi cài app. */
-var ASSETS = ["./", "index.html", "manifest.webmanifest", "apple-touch-icon-v1-2-72.png", "icon-192-v1-2-72.png", "icon-512-v1-2-72.png", "assets/myrace-logo.png", "assets/optimus-head.jpg", "assets/bumblebee-head.jpg", "assets/kirito-head.png", "assets/ironman-hero.jpg", "assets/avengers-team.jpg", "assets/naruto-banner.webp", "assets/chelsea-banner.jpg", "assets/jujutsu-banner.jpg", "assets/myrace-icon.png", "assets/myrace-wordmark.png", "assets/myrace-wordmark-only.png", "assets/myrace-tagline.png", "assets/myrace-banner.png"];
+var ASSETS = ["./", "index.html", "push-config.js", "manifest.webmanifest", "apple-touch-icon-v1-2-72.png", "icon-192-v1-2-72.png", "icon-512-v1-2-72.png", "assets/myrace-logo.png", "assets/optimus-head.jpg", "assets/bumblebee-head.jpg", "assets/kirito-head.png", "assets/ironman-hero.jpg", "assets/avengers-team.jpg", "assets/naruto-banner.webp", "assets/chelsea-banner.jpg", "assets/jujutsu-banner.jpg", "assets/myrace-icon.png", "assets/myrace-wordmark.png", "assets/myrace-wordmark-only.png", "assets/myrace-tagline.png", "assets/myrace-banner.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(caches.open(V).then(function (c) { return c.addAll(ASSETS); }).catch(function () {}).then(function () { return self.skipWaiting(); }));

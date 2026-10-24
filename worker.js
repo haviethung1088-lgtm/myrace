@@ -1,6 +1,6 @@
-/* My Race – Web Push worker (Cloudflare Workers, module syntax)
-   Bindings cần có: KV (KV namespace), API_KEY (secret).  Tùy chọn: VAPID_SUB (https:// hoặc mailto:).
-   Cron Trigger: * * * * *  (mỗi phút) */
+/* My Race – Web Push worker dùng chung.
+   Cloudflare bindings: KV (KV namespace); APP_ORIGIN là biến tùy chọn.
+   Secret tùy chọn: VAPID_SUB. Cron Trigger: * * * * * (mỗi phút). */
 const TE = new TextEncoder();
 const B = {
   enc(buf) { let s = ""; for (const x of new Uint8Array(buf)) s += String.fromCharCode(x); return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, ""); },
@@ -55,77 +55,76 @@ async function push(env, sub, obj) {
   return r.status;
 }
 
-/* ---- nội dung nhắc ---- */
-async function weather(r, loc) {
-  try {
-    const m = (r.am || "04:45").split(":").map(Number), hr = Math.floor((m[0] * 60 + m[1] + 15) / 60) % 24;
-    const u = "https://api.open-meteo.com/v1/forecast?latitude=" + (r.lat || 21.3227) + "&longitude=" + (r.lon || 105.4019) + "&hourly=temperature_2m,precipitation_probability&timezone=auto&forecast_days=1";
-    const j = await (await fetch(u, { signal: AbortSignal.timeout(3000) })).json();
-    return hr + "h: " + Math.round(j.hourly.temperature_2m[hr]) + "°, mưa " + Math.round(j.hourly.precipitation_probability[hr] || 0) + "%";
-  } catch (e) { return ""; }
-}
-async function build(kind, r, ymd, loc) {
-  if (kind === "am") {
-    const d = r.days && r.days[ymd]; if (!d) return null;
-    const w = await weather(r, loc);
-    return { title: "Hôm nay · " + d.t, body: (w ? w + " · " : "") + d.s, tag: "am-" + ymd, url: "./" };
-  }
-  const tm = new Date(loc.getTime() + 864e5).toISOString().slice(0, 10), d = r.days && r.days[tm];
-  if (!d) return null;
-  return { title: "Ngày mai · " + d.t, body: d.s + ". Chuẩn bị đồ, ăn nhẹ và ngủ sớm.", tag: "pm-" + tm, url: "./" };
+/* ---- lịch nhắc theo giờ địa phương từng thiết bị ---- */
+function ymd(d) { return d.toISOString().slice(0, 10); }
+function label(d) { return d && (d.t || d.s) || ""; }
+async function build(kind, today, tomorrow) {
+  const d = kind === "eve" ? tomorrow : today;
+  if (kind !== "hello" && !d) return null;
+  if (kind === "eve") return { title: d.race ? "Ngày mai thi đấu 🏁" : "Nhắc buổi tập ngày mai 🏃", body: label(d) + " · Chuẩn bị trang phục, giày và nghỉ ngơi tốt nhé!", tag: "eve-" + ymd(tomorrow._date), url: "./" };
+  if (kind === "today") return { title: d.race ? "Hôm nay thi đấu 🏁" : "Hôm nay có buổi tập 🏃", body: label(d), tag: "today-" + ymd(today._date), url: "./" };
+  return { title: "Chào ngày mới ☀️", body: today ? (today.race ? "Hôm nay là ngày thi đấu. Chúc anh bứt phá và tận hưởng đường chạy!" : "Hôm nay có lịch " + (label(today) || "tập luyện") + ". Chúc anh khởi đầu ngày mới đầy năng lượng!") : "Chúc anh một ngày mới nhiều năng lượng và luôn vui với mỗi bước chạy!", tag: "hello-" + ymd(today._date), url: "./" };
 }
 async function run(env, now = Date.now()) {
   const subs = (await env.KV.get("subs", "json")) || {}; let dirty = false;
   for (const id of Object.keys(subs)) {
-    const r = subs[id], loc = new Date(now + (r.tz == null ? 420 : r.tz) * 6e4);
-    const ymd = loc.toISOString().slice(0, 10), mins = loc.getUTCHours() * 60 + loc.getUTCMinutes();
+    const r = subs[id], local = new Date(now + (Number.isFinite(r.tz) ? r.tz : 420) * 60000);
+    const key = ymd(local), mins = local.getUTCHours() * 60 + local.getUTCMinutes();
+    const today = Object.assign({}, (r.days || {})[key], { _date: local });
+    const nextDate = new Date(local.getTime() + 86400000), nextKey = ymd(nextDate);
+    const tomorrow = Object.assign({}, (r.days || {})[nextKey], { _date: nextDate });
     r.last = r.last || {};
-    for (const kind of ["am", "pm"]) {
-      if (!r[kind]) continue;
-      const p = r[kind].split(":").map(Number), tm = p[0] * 60 + p[1];
-      if (mins >= tm && mins < tm + 30 && r.last[kind] !== ymd) {
-        const msg = await build(kind, r, ymd, loc);
-        if (!msg) { r.last[kind] = ymd; dirty = true; continue; }
-        let st = 0; try { st = await push(env, r.sub, msg); } catch (e) {}
-        if (st === 404 || st === 410) { delete subs[id]; dirty = true; break; }
-        if (st >= 200 && st < 300) { r.last[kind] = ymd; dirty = true; }
-      }
+    for (const [kind, target, dateKey] of [["eve",1200,nextKey],["today",0,key],["hello",480,key]]) {
+      if (mins < target || mins >= target + 2 || r.last[kind] === dateKey) continue;
+      const msg = await build(kind, today, tomorrow);
+      if (!msg) { r.last[kind] = dateKey; dirty = true; continue; }
+      let status = 0; try { status = await push(env, r.sub, msg); } catch (_) {}
+      if (status === 404 || status === 410) { delete subs[id]; dirty = true; break; }
+      if (status >= 200 && status < 300) { r.last[kind] = dateKey; dirty = true; }
     }
   }
   if (dirty) await env.KV.put("subs", JSON.stringify(subs));
 }
 
-/* ---- HTTP ---- */
+/* ---- API dùng chung, CORS giới hạn vào GitHub Pages và giới hạn tần suất ---- */
 const sid = async (ep) => B.enc(await crypto.subtle.digest("SHA-256", TE.encode(ep))).slice(0, 22);
-function same(a, b) { if (a.length !== b.length) return false; let x = 0; for (let i = 0; i < a.length; i++) x |= a.charCodeAt(i) ^ b.charCodeAt(i); return x === 0; }
+function allowedOrigin(req, env) { const o = req.headers.get("Origin"); return !!o && o === (env.APP_ORIGIN || "https://haviethung1088-lgtm.github.io"); }
+function response(obj, status, origin) { const h = { "Content-Type":"application/json", "Cache-Control":"no-store" }; if (origin) { h["Access-Control-Allow-Origin"] = origin; h.Vary = "Origin"; } return new Response(JSON.stringify(obj), { status, headers:h }); }
+async function limited(req, env, route, max) {
+  const ip = req.headers.get("CF-Connecting-IP") || "unknown", hash = B.enc(await crypto.subtle.digest("SHA-256", TE.encode(ip))).slice(0,24), key = "rl:" + route + ":" + hash;
+  const n = Number(await env.KV.get(key) || 0); if (n >= max) return false;
+  await env.KV.put(key, String(n + 1), { expirationTtl:60 }); return true;
+}
 export default {
   async fetch(req, env) {
-    const url = new URL(req.url), cors = { "Access-Control-Allow-Origin": env.ALLOW_ORIGIN || "*", "Access-Control-Allow-Headers": "content-type,x-api-key", "Access-Control-Allow-Methods": "GET,POST,OPTIONS" };
-    const J = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { ...cors, "Content-Type": "application/json" } });
-    if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors });
-    if (url.pathname === "/" || url.pathname === "/health") return J({ ok: true, name: "my-race-push" });
-    if (!env.API_KEY) return J({ error: "Chưa đặt biến API_KEY trong Worker" }, 500);
-    if (!same(req.headers.get("x-api-key") || "", env.API_KEY)) return J({ error: "Sai mã bí mật" }, 401);
+    const url = new URL(req.url), origin = req.headers.get("Origin"), allowed = allowedOrigin(req, env);
+    const cors = allowed ? { "Access-Control-Allow-Origin":origin, "Access-Control-Allow-Headers":"content-type", "Access-Control-Allow-Methods":"GET,POST,OPTIONS", Vary:"Origin" } : {};
+    if (req.method === "OPTIONS") return new Response(null, { status:allowed ? 204 : 403, headers:cors });
+    if (url.pathname === "/" || url.pathname === "/health") return response({ ok:true, name:"my-race-push" }, 200, allowed ? origin : null);
+    if (!allowed) return response({ error:"Nguồn truy cập không được phép." }, 403);
+    if (!env.KV) return response({ error:"Worker chưa được gắn KV namespace (binding KV)." }, 500, origin);
     try {
-      if (url.pathname === "/config" && req.method === "GET") return J({ pub: (await vapid(env)).pub });
-      if (req.method !== "POST") return J({ error: "not found" }, 404);
-      const b = await req.json(), subs = (await env.KV.get("subs", "json")) || {};
+      if (url.pathname === "/config" && req.method === "GET") return response({ pub:(await vapid(env)).pub }, 200, origin);
+      if (req.method !== "POST") return response({ error:"not found" }, 404, origin);
+      const b = await req.json(), route = url.pathname.slice(1), max = route === "subscribe" ? 30 : 60;
+      if (!(await limited(req, env, route, max))) return response({ error:"Thao tác quá nhanh. Hãy thử lại sau một phút." }, 429, origin);
+      const subs = (await env.KV.get("subs", "json")) || {};
       if (url.pathname === "/subscribe") {
-        const s = b.sub; if (!s || !s.endpoint || !/^https:\/\//.test(s.endpoint) || !s.keys || !s.keys.p256dh || !s.keys.auth) return J({ error: "subscription không hợp lệ" }, 400);
-        const id = await sid(s.endpoint), old = subs[id];
-        subs[id] = { sub: s, am: b.am || "", pm: b.pm || "", lat: b.lat, lon: b.lon, tz: b.tz, days: b.days || {}, name: b.name || "", last: old ? old.last : {} };
-        if (Object.keys(subs).length > 5) return J({ error: "quá nhiều thiết bị" }, 400);
-        await env.KV.put("subs", JSON.stringify(subs)); return J({ ok: true });
+        const s = b.sub; if (!s || !s.endpoint || !/^https:\/\//.test(s.endpoint) || !s.keys || !s.keys.p256dh || !s.keys.auth) return response({ error:"subscription không hợp lệ" }, 400, origin);
+        if (!b.days || typeof b.days !== "object" || Array.isArray(b.days) || !Number.isFinite(Number(b.tz)) || Math.abs(Number(b.tz)) > 840) return response({ error:"Lịch hoặc múi giờ không hợp lệ." }, 400, origin);
+        const id = await sid(s.endpoint), old = subs[id]; if (!old && Object.keys(subs).length >= 1000) return response({ error:"Dịch vụ đang đủ số thiết bị đăng ký." }, 503, origin);
+        subs[id] = { sub:s, days:b.days, tz:Number(b.tz), name:String(b.name || "").slice(0,80), last:old ? old.last : {} };
+        await env.KV.put("subs", JSON.stringify(subs)); return response({ ok:true }, 200, origin);
       }
-      if (url.pathname === "/unsubscribe") { delete subs[await sid(b.endpoint || "")]; await env.KV.put("subs", JSON.stringify(subs)); return J({ ok: true }); }
+      if (url.pathname === "/unsubscribe") { if (b.endpoint) delete subs[await sid(b.endpoint)]; await env.KV.put("subs", JSON.stringify(subs)); return response({ ok:true }, 200, origin); }
       if (url.pathname === "/test") {
-        const id = await sid(b.endpoint || ""), r = subs[id]; if (!r) return J({ error: "Thiết bị chưa đăng ký" }, 404);
-        const status = await push(env, r.sub, { title: "My Race", body: "Thông báo đẩy đã hoạt động.", tag: "test", url: "./" });
-        if (status === 404 || status === 410) { delete subs[id]; await env.KV.put("subs", JSON.stringify(subs)); return J({ status, error: "Đăng ký thiết bị đã hết hạn. Hãy bật nhắc lại trên thiết bị." }); }
-        return J({ status, error: status < 200 || status >= 300 ? "Dịch vụ thông báo từ chối yêu cầu (HTTP " + status + ")." : undefined });
+        const id = await sid(b.endpoint || ""), r = subs[id]; if (!r) return response({ error:"Thiết bị chưa đăng ký" }, 404, origin);
+        const status = await push(env, r.sub, { title:"My Race", body:"Thông báo đẩy đã hoạt động.", tag:"test", url:"./" });
+        if (status === 404 || status === 410) { delete subs[id]; await env.KV.put("subs", JSON.stringify(subs)); return response({ status, error:"Đăng ký thiết bị đã hết hạn. Hãy bật nhắc lại trên thiết bị." }, 200, origin); }
+        return response({ status, error:status < 200 || status >= 300 ? "Dịch vụ thông báo từ chối yêu cầu (HTTP " + status + ")." : undefined }, 200, origin);
       }
-    } catch (e) { return J({ error: String(e && e.message || e) }, 500); }
-    return J({ error: "not found" }, 404);
+    } catch (e) { return response({ error:String(e && e.message || e) }, 500, origin); }
+    return response({ error:"not found" }, 404, origin);
   },
   async scheduled(event, env, ctx) { ctx.waitUntil(run(env)); }
 };
