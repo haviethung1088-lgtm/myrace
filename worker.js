@@ -58,12 +58,44 @@ async function push(env, sub, obj) {
 /* ---- lịch nhắc theo giờ địa phương từng thiết bị ---- */
 function ymd(d) { return d.toISOString().slice(0, 10); }
 function label(d) { return d && (d.t || d.s) || ""; }
-async function build(kind, today, tomorrow) {
+async function weatherBrief(env, loc, dateKey) {
+  if (!loc || !Number.isFinite(Number(loc.lat)) || !Number.isFinite(Number(loc.lon))) return "";
+  const lat = Math.round(Number(loc.lat) * 100) / 100, lon = Math.round(Number(loc.lon) * 100) / 100;
+  const cacheKey = "weather:" + dateKey + ":" + lat.toFixed(2) + ":" + lon.toFixed(2);
+  try {
+    const cached = await env.KV.get(cacheKey, "json");
+    if (cached && cached.text) return cached.text;
+    const u = new URL("https://api.open-meteo.com/v1/forecast");
+    u.searchParams.set("latitude", String(lat)); u.searchParams.set("longitude", String(lon));
+    u.searchParams.set("daily", "weather_code,temperature_2m_min,temperature_2m_max,precipitation_probability_max,wind_speed_10m_max");
+    u.searchParams.set("forecast_days", "1"); u.searchParams.set("timezone", "auto");
+    const res = await fetch(u.toString()); if (!res.ok) return "";
+    const j = await res.json(), d = j.daily || {};
+    const code = Number(d.weather_code && d.weather_code[0]), min = Number(d.temperature_2m_min && d.temperature_2m_min[0]);
+    const max = Number(d.temperature_2m_max && d.temperature_2m_max[0]), rain = Number(d.precipitation_probability_max && d.precipitation_probability_max[0]);
+    const wind = Number(d.wind_speed_10m_max && d.wind_speed_10m_max[0]);
+    if (![min, max].every(Number.isFinite)) return "";
+    let sky = "trời nhiều mây";
+    if (code === 0) sky = "trời quang"; else if (code === 1) sky = "ít mây"; else if (code === 2) sky = "mây rải rác";
+    else if (code === 45 || code === 48) sky = "sương mù"; else if (code >= 51 && code <= 57) sky = "mưa phùn";
+    else if (code >= 61 && code <= 67) sky = "mưa"; else if (code >= 71 && code <= 77) sky = "có tuyết";
+    else if (code >= 80 && code <= 82) sky = "mưa rào"; else if (code >= 85 && code <= 86) sky = "mưa tuyết";
+    else if (code >= 95) sky = "dông";
+    const text = sky + ", " + Math.round(min) + "–" + Math.round(max) + "°C" +
+      (Number.isFinite(rain) ? " · mưa " + Math.round(rain) + "%" : "") +
+      (Number.isFinite(wind) ? " · gió tối đa " + Math.round(wind) + " km/h" : "");
+    await env.KV.put(cacheKey, JSON.stringify({ text }), { expirationTtl: 3600 });
+    return text;
+  } catch (_) { return ""; }
+}
+async function build(kind, today, tomorrow, weather) {
   const d = kind === "eve" ? tomorrow : today;
   if (kind !== "hello" && !d) return null;
   if (kind === "eve") return { title: d.race ? "Ngày mai thi đấu 🏁" : "Nhắc buổi tập ngày mai 🏃", body: label(d) + " · Chuẩn bị trang phục, giày và nghỉ ngơi tốt nhé!", tag: "eve-" + ymd(tomorrow._date), url: "./" };
   if (kind === "today") return { title: d.race ? "Hôm nay thi đấu 🏁" : "Hôm nay có buổi tập 🏃", body: label(d), tag: "today-" + ymd(today._date), url: "./" };
-  return { title: "Chào ngày mới ☀️", body: today ? (today.race ? "Hôm nay là ngày thi đấu. Chúc anh bứt phá và tận hưởng đường chạy!" : "Hôm nay có lịch " + (label(today) || "tập luyện") + ". Chúc anh khởi đầu ngày mới đầy năng lượng!") : "Chúc anh một ngày mới nhiều năng lượng và luôn vui với mỗi bước chạy!", tag: "hello-" + ymd(today._date), url: "./" };
+  let body = today ? (today.race ? "Hôm nay là ngày thi đấu. Chúc anh bứt phá và tận hưởng đường chạy!" : "Hôm nay có lịch " + (label(today) || "tập luyện") + ". Chúc anh khởi đầu ngày mới đầy năng lượng!") : "Chúc anh một ngày mới nhiều năng lượng và luôn vui với mỗi bước chạy!";
+  if (weather) body += " Thời tiết: " + weather + ".";
+  return { title: "Chào ngày mới ☀️", body, tag: "hello-" + ymd(today._date), url: "./" };
 }
 async function run(env, now = Date.now()) {
   const subs = (await env.KV.get("subs", "json")) || {}; let dirty = false;
@@ -76,7 +108,8 @@ async function run(env, now = Date.now()) {
     r.last = r.last || {};
     for (const [kind, target, dateKey] of [["eve",1200,nextKey],["today",0,key],["hello",480,key]]) {
       if (mins < target || mins >= target + 2 || r.last[kind] === dateKey) continue;
-      const msg = await build(kind, today, tomorrow);
+      const wx = kind === "hello" && r.weatherLoc ? await weatherBrief(env, r.weatherLoc, key) : "";
+      const msg = await build(kind, today, tomorrow, wx);
       if (!msg) { r.last[kind] = dateKey; dirty = true; continue; }
       let status = 0; try { status = await push(env, r.sub, msg); } catch (_) {}
       if (status === 404 || status === 410) { delete subs[id]; dirty = true; break; }
@@ -113,7 +146,16 @@ export default {
         const s = b.sub; if (!s || !s.endpoint || !/^https:\/\//.test(s.endpoint) || !s.keys || !s.keys.p256dh || !s.keys.auth) return response({ error:"subscription không hợp lệ" }, 400, origin);
         if (!b.days || typeof b.days !== "object" || Array.isArray(b.days) || !Number.isFinite(Number(b.tz)) || Math.abs(Number(b.tz)) > 840) return response({ error:"Lịch hoặc múi giờ không hợp lệ." }, 400, origin);
         const id = await sid(s.endpoint), old = subs[id]; if (!old && Object.keys(subs).length >= 1000) return response({ error:"Dịch vụ đang đủ số thiết bị đăng ký." }, 503, origin);
-        subs[id] = { sub:s, days:b.days, tz:Number(b.tz), name:String(b.name || "").slice(0,80), last:old ? old.last : {} };
+        let weatherLoc = old && old.weatherLoc || null;
+        if (Object.prototype.hasOwnProperty.call(b, "weatherLoc")) {
+          if (b.weatherLoc === null) weatherLoc = null;
+          else {
+            const lat = Number(b.weatherLoc && b.weatherLoc.lat), lon = Number(b.weatherLoc && b.weatherLoc.lon);
+            if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) return response({ error:"Tọa độ thời tiết không hợp lệ." }, 400, origin);
+            weatherLoc = { lat:Math.round(lat * 100) / 100, lon:Math.round(lon * 100) / 100 };
+          }
+        }
+        subs[id] = { sub:s, days:b.days, tz:Number(b.tz), name:String(b.name || "").slice(0,80), weatherLoc, last:old ? old.last : {} };
         await env.KV.put("subs", JSON.stringify(subs)); return response({ ok:true }, 200, origin);
       }
       if (url.pathname === "/unsubscribe") { if (b.endpoint) delete subs[await sid(b.endpoint)]; await env.KV.put("subs", JSON.stringify(subs)); return response({ ok:true }, 200, origin); }
