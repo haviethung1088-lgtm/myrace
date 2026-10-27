@@ -1,12 +1,14 @@
 {
-  "ver": "1.2.140",
-  "date": "2026-10-24",
+  "ver": "1.2.141",
+  "date": "2026-10-27",
   "owner": {
     "name": "Hà Việt Hùng",
     "phone": "0968xxx888",
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.141: Chạm vào nhiệt độ để xem dự báo 7 ngày; thông tin chủ sở hữu hiển thị bằng tiếng Anh.",
+    "Bản 1.2.141: Chạm vào nhiệt độ để xem dự báo 7 ngày; thông tin chủ sở hữu hiển thị bằng tiếng Anh.",
     "Bản 1.2.140: Giữ nguyên dữ liệu đã lưu khi một phần giao diện gặp lỗi; cải thiện hiển thị thống kê Trang chủ.",
     "Bản 1.2.139: Sửa lỗi dấu phân cách trong Guide khiến mục hướng dẫn không mở được.",
     "Bản 1.2.138: Sửa lỗi mục Cài đặt không hiển thị sau khi sắp xếp lại các nhóm.",
