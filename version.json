@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.142",
+  "ver": "1.2.143",
   "date": "2026-10-27",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,7 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.143: Hiện đầy đủ bảng dự báo 7 ngày khi chạm nhiệt độ; đưa nút làm mới về vị trí cũ.",
     "Bản 1.2.142: Làm rõ vùng chạm thời tiết để mở dự báo 7 ngày trên điện thoại.",
     "Bản 1.2.141: Chạm vào nhiệt độ để xem dự báo 7 ngày; thông tin chủ sở hữu hiển thị bằng tiếng Anh.",
     "Bản 1.2.141: Chạm vào nhiệt độ để xem dự báo 7 ngày; thông tin chủ sở hữu hiển thị bằng tiếng Anh.",
