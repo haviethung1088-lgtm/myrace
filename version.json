@@ -1,5 +1,5 @@
 {
-  "ver": "1.2.141",
+  "ver": "1.2.142",
   "date": "2026-10-27",
   "owner": {
     "name": "Hà Việt Hùng",
@@ -7,6 +7,7 @@
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
+    "Bản 1.2.142: Làm rõ vùng chạm thời tiết để mở dự báo 7 ngày trên điện thoại.",
     "Bản 1.2.141: Chạm vào nhiệt độ để xem dự báo 7 ngày; thông tin chủ sở hữu hiển thị bằng tiếng Anh.",
     "Bản 1.2.141: Chạm vào nhiệt độ để xem dự báo 7 ngày; thông tin chủ sở hữu hiển thị bằng tiếng Anh.",
     "Bản 1.2.140: Giữ nguyên dữ liệu đã lưu khi một phần giao diện gặp lỗi; cải thiện hiển thị thống kê Trang chủ.",
