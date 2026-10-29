@@ -4,7 +4,7 @@
 
 1. Trong Cloudflare, tạo một Worker mới và dán toàn bộ nội dung `worker.js` vào phần mã nguồn, sau đó Deploy.
 2. Tạo một KV namespace và gắn vào Worker với binding name chính xác là `KV`.
-3. Trong phần Triggers, thêm Cron Trigger `* * * * *` để Worker kiểm tra lịch mỗi phút. Mỗi thiết bị được nhắc theo múi giờ của chính thiết bị đó.
+3. Trong phần Triggers, thêm Cron Trigger `* * * * *` để Worker kiểm tra lịch mỗi phút. Mỗi thiết bị được nhắc theo múi giờ của chính thiết bị đó. Nếu dịch vụ đẩy tạm thời lỗi, Worker tự thử lại trong ngày; thiết bị mất mạng có thể nhận thông báo đã xếp hàng khi kết nối lại (tối đa 24 giờ).
 4. Worker mặc định chỉ nhận yêu cầu từ `https://haviethung1088-lgtm.github.io`. Nếu GitHub Pages dùng domain khác, đặt biến `APP_ORIGIN` thành đúng origin của trang (chỉ gồm giao thức và tên miền, không có đường dẫn).
 5. Mở `https://TEN-WORKER.TEN-TK.workers.dev/health`. Kết quả cần có `{"ok":true}`.
 6. Sao chép URL gốc `https://TEN-WORKER.TEN-TK.workers.dev` vào dòng `MY_RACE_PUSH_URL` trong `push-config.js`. Không đặt API_KEY hay secret trong file này; Worker tự tạo và lưu khóa Web Push trong KV.
@@ -16,4 +16,4 @@
 - 00:00: nhắc buổi tập hoặc thi đấu nếu lịch hôm nay có hoạt động.
 - 08:00: lời chào hằng ngày, kể cả ngày nghỉ; có thêm tóm tắt trời, nhiệt độ, khả năng mưa và gió nếu người dùng đã đồng ý chia sẻ vị trí.
 
-App tự đồng bộ lịch khi mở và sau khi lịch tập được lưu. Thiết bị cần có kết nối mạng để đăng ký/cập nhật; trình duyệt phải hỗ trợ Web Push. Trên iPhone cần iOS 16.4 trở lên và mở app đã thêm vào Màn hình chính.
+App tự đồng bộ lịch khi mở và sau khi lịch tập được lưu. Khi mạng trở lại, app cũng tự làm mới thời tiết; nếu lần tải thất bại, app thử lại một lần và giữ dữ liệu cũ kèm trạng thái phù hợp. Lấy thời tiết sẽ thử qua Worker làm cầu nối trước, tọa độ làm tròn không được ghi vào KV từ luồng dự báo này; nếu Worker không khả dụng, app dùng Open-Meteo trực tiếp. Thiết bị cần có kết nối mạng để đăng ký/cập nhật; trình duyệt phải hỗ trợ Web Push. Trên iPhone cần iOS 16.4 trở lên và mở app đã thêm vào Màn hình chính.

@@ -51,7 +51,8 @@ async function encrypt(sub, text) {
 async function push(env, sub, obj) {
   const body = await encrypt(sub, JSON.stringify(obj));
   const v = await vapid(env), t = await jwt(env, new URL(sub.endpoint).origin);
-  const r = await fetch(sub.endpoint, { method: "POST", headers: { Authorization: "vapid t=" + t + ", k=" + v.pub, "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream", TTL: "3600", Urgency: "high" }, body });
+  // Keep accepted notifications available while a phone is temporarily offline.
+  const r = await fetch(sub.endpoint, { method: "POST", headers: { Authorization: "vapid t=" + t + ", k=" + v.pub, "Content-Encoding": "aes128gcm", "Content-Type": "application/octet-stream", TTL: "86400", Urgency: "high" }, body });
   return r.status;
 }
 
@@ -106,14 +107,18 @@ async function run(env, now = Date.now()) {
     const nextDate = new Date(local.getTime() + 86400000), nextKey = ymd(nextDate);
     const tomorrow = Object.assign({}, (r.days || {})[nextKey], { _date: nextDate });
     r.last = r.last || {};
+    r.attempt = r.attempt || {};
     for (const [kind, target, dateKey] of [["eve",1200,nextKey],["today",0,key],["hello",480,key]]) {
-      if (mins < target || mins >= target + 2 || r.last[kind] === dateKey) continue;
+      if (mins < target || r.last[kind] === dateKey) continue;
+      const prev = r.attempt[kind];
+      if (prev && prev.date === dateKey && now - prev.at < 5 * 60000) continue;
       const wx = kind === "hello" && r.weatherLoc ? await weatherBrief(env, r.weatherLoc, key) : "";
       const msg = await build(kind, today, tomorrow, wx);
-      if (!msg) { r.last[kind] = dateKey; dirty = true; continue; }
+      if (!msg) { r.last[kind] = dateKey; delete r.attempt[kind]; dirty = true; continue; }
+      r.attempt[kind] = { date:dateKey, at:now }; dirty = true;
       let status = 0; try { status = await push(env, r.sub, msg); } catch (_) {}
       if (status === 404 || status === 410) { delete subs[id]; dirty = true; break; }
-      if (status >= 200 && status < 300) { r.last[kind] = dateKey; dirty = true; }
+      if (status >= 200 && status < 300) { r.last[kind] = dateKey; delete r.attempt[kind]; dirty = true; }
     }
   }
   if (dirty) await env.KV.put("subs", JSON.stringify(subs));
@@ -138,6 +143,18 @@ export default {
     if (!env.KV) return response({ error:"Worker chưa được gắn KV namespace (binding KV)." }, 500, origin);
     try {
       if (url.pathname === "/config" && req.method === "GET") return response({ pub:(await vapid(env)).pub }, 200, origin);
+      if (url.pathname === "/weather" && req.method === "GET") {
+        if (!(await limited(req, env, "weather", 30))) return response({ error:"Yêu cầu thời tiết quá nhanh. Hãy thử lại sau một phút." }, 429, origin);
+        const lat = Number(url.searchParams.get("lat")), lon = Number(url.searchParams.get("lon"));
+        if (!Number.isFinite(lat) || lat < -90 || lat > 90 || !Number.isFinite(lon) || lon < -180 || lon > 180) return response({ error:"Tọa độ thời tiết không hợp lệ." }, 400, origin);
+        const upstream = new URL("https://api.open-meteo.com/v1/forecast");
+        upstream.searchParams.set("latitude", String(Math.round(lat * 100) / 100));
+        upstream.searchParams.set("longitude", String(Math.round(lon * 100) / 100));
+        for (const key of ["current","hourly","daily","timezone","forecast_days"]) if (url.searchParams.has(key)) upstream.searchParams.set(key, url.searchParams.get(key));
+        const wx = await fetch(upstream.toString());
+        if (!wx.ok) return response({ error:"Máy chủ thời tiết tạm thời chưa phản hồi." }, 502, origin);
+        return response(await wx.json(), 200, origin);
+      }
       if (req.method !== "POST") return response({ error:"not found" }, 404, origin);
       const b = await req.json(), route = url.pathname.slice(1), max = route === "subscribe" ? 30 : 60;
       if (!(await limited(req, env, route, max))) return response({ error:"Thao tác quá nhanh. Hãy thử lại sau một phút." }, 429, origin);
