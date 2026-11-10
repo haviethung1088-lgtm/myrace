@@ -1,13 +1,14 @@
 {
-  "ver": "1.2.147",
-  "date": "2026-11-09",
+  "ver": "1.2.148",
+  "date": "2026-11-10",
   "owner": {
     "name": "Hà Việt Hùng",
     "phone": "0968xxx888",
     "email": "haviethung1088@gmail.com"
   },
   "notes": [
-    "Bản 1.2.147: Thông báo nhắc tập gọi đúng tên buổi Easy, Tempo, Interval, progression hoặc Long run; tiêu đề thông báo thử gọn hơn.",
+    "Bản 1.2.148: Mỗi chuỗi hai tuần tập đạt mục tiêu chỉ mở được một chủ đề giới hạn.",
+    "Bản 1.2.147: Thông báo nhắc tập gọi đúng tên buổi Easy, Tempo, Interval, progression hoặc Long run.",
     "Bản 1.2.146: Tự thử lại thông báo khi dịch vụ tạm lỗi, giữ thông báo lâu hơn khi điện thoại mất mạng; thời tiết tự tải lại khi mạng phục hồi và có đường kết nối dự phòng qua Worker.",
     "Bản 1.2.145: Thông báo chào ngày mới lúc 08:00 có thể kèm dự báo thời tiết theo vị trí đã cho phép; bảng dự báo dễ đọc hơn trên màn hình nhỏ.",
     "Bản 1.2.144: Giữ mỗi dòng dự báo trên một hàng ở màn hình nhỏ.",
